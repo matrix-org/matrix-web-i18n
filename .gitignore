@@ -1,0 +1,11 @@
+node_modules
+/.npmrc
+/*.log
+package-lock.json
+.lock-wscript
+build/Release
+coverage
+lib-cov
+out
+/dist
+/lib

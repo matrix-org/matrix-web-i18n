@@ -1,0 +1,27 @@
+{
+    "name": "matrix-web-i18n",
+    "version": "1.0.0",
+    "description": "Internationalisation utils for Matrix web projects",
+    "keywords": [
+        "i18n"
+    ],
+    "license": "Apache-2.0",
+    "bin": {
+        "matrix-gen-i18n": "scripts/gen-i18n.js",
+        "matrix-prune-i18n": "scripts/prune-i18n.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/matrix-org/matrix-web-i18n"
+    },
+    "homepage": "https://github.com/matrix-org/matrix-web-i18n",
+    "bugs": {
+        "url": "https://github.com/matrix-org/matrix-web-i18n/issues"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "@babel/parser": "^7.13.16",
+        "@babel/traverse": "^7.13.17",
+        "walk": "^2.3.14"
+    }
+}
