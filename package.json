@@ -7,8 +7,8 @@
     ],
     "license": "Apache-2.0",
     "bin": {
-        "matrix-gen-i18n": "scripts/gen-i18n.js",
-        "matrix-prune-i18n": "scripts/prune-i18n.js"
+        "gen-18n": "scripts/gen-i18n.js",
+        "prune-18n": "scripts/prune-i18n.js"
     },
     "repository": {
         "type": "git",
@@ -18,10 +18,10 @@
     "bugs": {
         "url": "https://github.com/matrix-org/matrix-web-i18n/issues"
     },
-    "dependencies": {},
-    "devDependencies": {
+    "dependencies": {
         "@babel/parser": "^7.13.16",
         "@babel/traverse": "^7.13.17",
         "walk": "^2.3.14"
     }
 }
+ 
