@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /*
-Copyright 2017 New Vector Ltd
+Copyright 2017-2021 The Matrix.org Foundation C.I.C.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -117,8 +117,8 @@ function getTranslationsJs(file) {
         ];
 
         if (file.endsWith(".js") || file.endsWith(".jsx")) {
-            // all JS is assumed to be flow or react
-            plugins.push("flow", "jsx");
+            // All JS is assumed to be React
+            plugins.push("jsx");
         } else if (file.endsWith(".ts")) {
             // TS can't use JSX unless it's a TSX file (otherwise angle casts fail)
             plugins.push("typescript");
