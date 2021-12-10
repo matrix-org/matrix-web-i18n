@@ -32,7 +32,7 @@ const walk = require('walk');
 const parser = require("@babel/parser");
 const traverse = require("@babel/traverse");
 
-const TRANSLATIONS_FUNCS = ['_t', '_td'];
+const TRANSLATIONS_FUNCS = ['_t', '_td', '_tDom'];
 
 const INPUT_TRANSLATIONS_FILE = 'src/i18n/strings/en_EN.json';
 const OUTPUT_FILE = 'src/i18n/strings/en_EN.json';
