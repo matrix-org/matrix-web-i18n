@@ -32,7 +32,15 @@ const walk = require('walk');
 const parser = require("@babel/parser");
 const traverse = require("@babel/traverse");
 
-const TRANSLATIONS_FUNCS = ['_t', '_td'];
+// Find the package.json for the project we're running gen-18n against
+const projectPackageJsonPath = path.join(process.cwd(), 'package.json');
+const projectPackageJson = require(projectPackageJsonPath);
+
+const TRANSLATIONS_FUNCS = ['_t', '_td']
+    // Add some addition translation functions to look out that are specified
+    // per project in package.json under the
+    // "matrix_i18n_extra_translation_funcs" key
+    .concat(projectPackageJson.matrix_i18n_extra_translation_funcs || []);
 
 const INPUT_TRANSLATIONS_FILE = 'src/i18n/strings/en_EN.json';
 const OUTPUT_FILE = 'src/i18n/strings/en_EN.json';
