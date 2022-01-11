@@ -36,7 +36,7 @@ const traverse = require("@babel/traverse");
 const projectPackageJsonPath = path.join(process.cwd(), 'package.json');
 const projectPackageJson = require(projectPackageJsonPath);
 
-const TRANSLATIONS_FUNCS = ['_t', '_td']
+const TRANSLATIONS_FUNCS = ['_t', '_td', '_tDom']
     // Add some addition translation functions to look out that are specified
     // per project in package.json under the
     // "matrix_i18n_extra_translation_funcs" key
