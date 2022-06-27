@@ -314,7 +314,7 @@ for (const tr of translatables) {
 
 fs.writeFileSync(
     OUTPUT_FILE,
-    JSON.stringify(trObj, translatables, 4) + "\n"
+    JSON.stringify(trObj, Array.from(translatables), 4) + "\n"
 );
 
 console.log();
