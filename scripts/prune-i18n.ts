@@ -55,6 +55,12 @@ for (const filename of fs.readdirSync(I18NDIR)) {
         if (!enStrings.has(trKey)) {
             delete trs[tr];
         }
+
+        // Clean up for when a string gets pluralised,
+        // to not leave behind the un-pluralised variant which causes warnings
+        if (parts.length > 1 && trKey in trs) {
+            delete trs[trKey];
+        }
     }
 
     const removed = oldLen - Object.keys(trs).length;
