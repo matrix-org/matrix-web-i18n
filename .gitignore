@@ -9,3 +9,4 @@ lib-cov
 out
 /dist
 /lib
+/scripts/*.js

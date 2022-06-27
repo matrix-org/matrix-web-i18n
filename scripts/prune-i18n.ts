@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /*
 Copyright 2017 New Vector Ltd
 
@@ -20,17 +18,21 @@ limitations under the License.
  * Looks through all the translation files and removes any strings
  * which don't appear in en_EN.json.
  * Use this if you remove a translation, but merge any outstanding changes
- * from weblate first or you'll need to resolve the conflict in weblate.
+ * from Weblate first, or you'll need to resolve the conflict in Weblate.
  */
 
-const fs = require('fs');
-const path = require('path');
+import * as path from "path";
+import * as fs from "fs";
 
 const I18NDIR = 'src/i18n/strings';
 
-const enStringsRaw = JSON.parse(fs.readFileSync(path.join(I18NDIR, 'en_EN.json')));
+type TranslationFile = {
+    [key: string]: string;
+}
 
-const enStrings = new Set();
+const enStringsRaw = JSON.parse(fs.readFileSync(path.join(I18NDIR, 'en_EN.json')).toString()) as TranslationFile;
+
+const enStrings = new Set<string>();
 for (const str of Object.keys(enStringsRaw)) {
     const parts = str.split('|');
     if (parts.length > 1) {
@@ -45,7 +47,7 @@ for (const filename of fs.readdirSync(I18NDIR)) {
     if (filename === 'basefile.json') continue;
     if (!filename.endsWith('.json')) continue;
 
-    const trs = JSON.parse(fs.readFileSync(path.join(I18NDIR, filename)));
+    const trs = JSON.parse(fs.readFileSync(path.join(I18NDIR, filename)).toString()) as TranslationFile;
     const oldLen = Object.keys(trs).length;
     for (const tr of Object.keys(trs)) {
         const parts = tr.split('|');
