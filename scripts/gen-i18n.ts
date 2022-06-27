@@ -163,7 +163,7 @@ function getTranslationsJs(file: string): Set<string> {
                     if (isIdentifier(p.node.callee) && p.node.callee.name === '_t') {
                         try {
                             const placeholders = getFormatStrings(tKey);
-                            for (const placeholder of Array.from(placeholders)) {
+                            for (const placeholder of placeholders) {
                                 if (p.node.arguments.length < 2 || !isObjectExpression(p.node.arguments[1])) {
                                     throw new Error(`Placeholder found ('${placeholder}') but no substitutions given`);
                                 }
@@ -285,7 +285,7 @@ const walkOpts: WalkOptions = {
                 return;
             }
             console.log(`${fullPath} (${trs.size} strings)`);
-            for (const tr of Array.from(trs)) {
+            for (const tr of trs) {
                 // Convert DOS line endings to unix
                 translatables.add(tr.replace(/\r\n/g, "\n"));
             }
@@ -300,7 +300,7 @@ for (const path of SEARCH_PATHS) {
 }
 
 const trObj: Record<string, string | string[]> = {};
-for (const tr of Array.from(translatables)) {
+for (const tr of translatables) {
     if (tr.includes("|")) {
         if (inputTranslationsRaw[tr]) {
             trObj[tr] = inputTranslationsRaw[tr];
@@ -314,7 +314,7 @@ for (const tr of Array.from(translatables)) {
 
 fs.writeFileSync(
     OUTPUT_FILE,
-    JSON.stringify(trObj, Array.from(translatables), 4) + "\n"
+    JSON.stringify(trObj, translatables, 4) + "\n"
 );
 
 console.log();
