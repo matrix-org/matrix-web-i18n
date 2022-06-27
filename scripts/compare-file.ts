@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /*
 Copyright 2017 New Vector Ltd
 
@@ -16,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-const fs = require("fs");
+import * as fs from "fs";
 
 if (process.argv.length < 4) throw new Error("Missing source and target file arguments");
 

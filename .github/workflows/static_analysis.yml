@@ -1,0 +1,24 @@
+name: Static Analysis
+on:
+  pull_request: { }
+  push:
+    branches: [ main ]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  ts_lint:
+    name: "Typescript Syntax Check"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          cache: 'yarn'
+
+      - name: Install Deps
+        run: "yarn install"
+
+      - name: Typecheck
+        run: "yarn lint:types"

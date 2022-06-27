@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /*
 Copyright 2017-2021 The Matrix.org Foundation C.I.C.
 
@@ -24,13 +22,24 @@ limitations under the License.
  *
  * Usage: node scripts/gen-i18n.js
  */
-const fs = require('fs');
-const path = require('path');
 
-const walk = require('walk');
-
-const parser = require("@babel/parser");
-const traverse = require("@babel/traverse");
+import * as path from "path";
+import * as fs from "fs";
+import { WalkOptions, walkSync } from "walk";
+import * as parser from "@babel/parser";
+import traverse from "@babel/traverse";
+import {
+    isStringLiteral,
+    isBinaryExpression,
+    isTemplateLiteral,
+    isIdentifier,
+    isCallExpression,
+    isObjectProperty,
+    isObjectExpression,
+    ObjectExpression,
+    Node,
+} from "@babel/types";
+import { ParserPlugin } from "@babel/parser";
 
 // Find the package.json for the project we're running gen-18n against
 const projectPackageJsonPath = path.join(process.cwd(), 'package.json');
@@ -45,36 +54,34 @@ const TRANSLATIONS_FUNCS = ['_t', '_td', '_tDom']
 const INPUT_TRANSLATIONS_FILE = 'src/i18n/strings/en_EN.json';
 const OUTPUT_FILE = 'src/i18n/strings/en_EN.json';
 
-// NB. The sync version of walk is broken for single files so we walk
-// all of res rather than just res/home.html.
+// NB. The sync version of walk is broken for single files,
+// so we walk all of res rather than just res/home.html.
 // https://git.daplie.com/Daplie/node-walk/merge_requests/1 fixes it,
 // or if we get bored waiting for it to be merged, we could switch
 // to a project that's actively maintained.
 const SEARCH_PATHS = ['src', 'res'];
 
-function getObjectValue(obj, key) {
+function getObjectValue(obj: ObjectExpression, key: string): any {
     for (const prop of obj.properties) {
-        if (prop.key.type === 'Identifier' && prop.key.name === key) {
+        if (isObjectProperty(prop) && isIdentifier(prop.key) && prop.key.name === key) {
             return prop.value;
         }
     }
     return null;
 }
 
-function getTKey(arg) {
-    if (arg.type === 'Literal' || arg.type === "StringLiteral") {
+function getTKey(arg: Node): string | null {
+    if (isStringLiteral(arg)) {
         return arg.value;
-    } else if (arg.type === 'BinaryExpression' && arg.operator === '+') {
-        return getTKey(arg.left) + getTKey(arg.right);
-    } else if (arg.type === 'TemplateLiteral') {
-        return arg.quasis.map((q) => {
-            return q.value.raw;
-        }).join('');
+    } else if (isBinaryExpression(arg) && arg.operator === '+') {
+        return getTKey(arg.left)! + getTKey(arg.right)!;
+    } else if (isTemplateLiteral(arg)) {
+        return arg.quasis.map(q => q.value.raw).join('');
     }
     return null;
 }
 
-function getFormatStrings(str) {
+function getFormatStrings(str: string): Set<string> {
     // Match anything that starts with %
     // We could make a regex that matched the full placeholder, but this
     // would just not match invalid placeholders and so wouldn't help us
@@ -82,9 +89,9 @@ function getFormatStrings(str) {
     // Also note that for simplicity, this just matches a % character and then
     // anything up to the next % character (or a single %, or end of string).
     const formatStringRe = /%([^%]+|%|$)/g;
-    const formatStrings = new Set();
+    const formatStrings = new Set<string>();
 
-    let match;
+    let match: RegExpExecArray | null;
     while ( (match = formatStringRe.exec(str)) !== null ) {
         const placeholder = match[1]; // Minus the leading '%'
         if (placeholder === '%') continue; // Literal % is %%
@@ -109,13 +116,13 @@ function getFormatStrings(str) {
     return formatStrings;
 }
 
-function getTranslationsJs(file) {
+function getTranslationsJs(file: string): Set<string> {
     const contents = fs.readFileSync(file, { encoding: 'utf8' });
 
-    const trs = new Set();
+    const trs = new Set<string>();
 
     try {
-        const plugins = [
+        const plugins: ParserPlugin[] = [
             // https://babeljs.io/docs/en/babel-parser#plugins
             "classProperties",
             "objectRestSpread",
@@ -142,11 +149,10 @@ function getTranslationsJs(file) {
             tokens: true,
             plugins,
         });
-        traverse.default(babelParsed, {
+        traverse(babelParsed, {
             enter: (p) => {
-                const node = p.node;
-                if (p.isCallExpression() && node.callee && TRANSLATIONS_FUNCS.includes(node.callee.name)) {
-                    const tKey = getTKey(node.arguments[0]);
+                if (isCallExpression(p.node) && isIdentifier(p.node.callee) && TRANSLATIONS_FUNCS.includes(p.node.callee.name)) {
+                    const tKey = getTKey(p.node.arguments[0]);
 
                     // This happens whenever we call _t with non-literals (ie. whenever we've
                     // had to use a _td to compensate) so is expected.
@@ -154,24 +160,24 @@ function getTranslationsJs(file) {
 
                     // check the format string against the args
                     // We only check _t: _td has no args
-                    if (node.callee.name === '_t') {
+                    if (isIdentifier(p.node.callee) && p.node.callee.name === '_t') {
                         try {
                             const placeholders = getFormatStrings(tKey);
                             for (const placeholder of placeholders) {
-                                if (node.arguments.length < 2) {
+                                if (p.node.arguments.length < 2 || !isObjectExpression(p.node.arguments[1])) {
                                     throw new Error(`Placeholder found ('${placeholder}') but no substitutions given`);
                                 }
-                                const value = getObjectValue(node.arguments[1], placeholder);
+                                const value = getObjectValue(p.node.arguments[1], placeholder);
                                 if (value === null) {
                                     throw new Error(`No value found for placeholder '${placeholder}'`);
                                 }
                             }
 
                             // Validate tag replacements
-                            if (node.arguments.length > 2) {
-                                const tagMap = node.arguments[2];
+                            if (p.node.arguments.length > 2 && isObjectExpression(p.node.arguments[2])) {
+                                const tagMap = p.node.arguments[2];
                                 for (const prop of tagMap.properties || []) {
-                                    if (prop.key.type === 'Literal') {
+                                    if (isObjectProperty(prop) && isStringLiteral(prop.key)) {
                                         const tag = prop.key.value;
                                         // RegExp same as in src/languageHandler.js
                                         const regexp = new RegExp(`(<${tag}>(.*?)<\\/${tag}>|<${tag}>|<${tag}\\s*\\/>)`);
@@ -181,18 +187,17 @@ function getTranslationsJs(file) {
                                     }
                                 }
                             }
-
                         } catch (e) {
                             console.log();
-                            console.error(`ERROR: ${file}:${node.loc.start.line} ${tKey}`);
+                            console.error(`ERROR: ${file}:${p.node.loc?.start.line} ${tKey}`);
                             console.error(e);
                             process.exit(1);
                         }
                     }
 
                     let isPlural = false;
-                    if (node.arguments.length > 1 && node.arguments[1].type === 'ObjectExpression') {
-                        const countVal = getObjectValue(node.arguments[1], 'count');
+                    if (p.node.arguments.length > 1 && p.node.arguments[1].type === 'ObjectExpression') {
+                        const countVal = getObjectValue(p.node.arguments[1], 'count');
                         if (countVal) {
                             isPlural = true;
                         }
@@ -220,14 +225,14 @@ function getTranslationsJs(file) {
     return trs;
 }
 
-function getTranslationsOther(file) {
+function getTranslationsOther(file: string): Set<string> {
     const contents = fs.readFileSync(file, { encoding: 'utf8' });
 
-    const trs = new Set();
+    const trs = new Set<string>();
 
     // Taken from element-web src/components/structures/HomePage.js
     const translationsRegex = /_t\(['"]([\s\S]*?)['"]\)/mg;
-    let matches;
+    let matches: RegExpExecArray | null;
     while (matches = translationsRegex.exec(contents)) {
         trs.add(matches[1]);
     }
@@ -235,10 +240,14 @@ function getTranslationsOther(file) {
 }
 
 // gather en_EN plural strings from the input translations file:
-// the en_EN strings are all in the source with the exception of
+// the en_EN strings are all in the source except
 // pluralised strings, which we need to pull in from elsewhere.
 const inputTranslationsRaw = JSON.parse(fs.readFileSync(INPUT_TRANSLATIONS_FILE, { encoding: 'utf8' }));
-const enPlurals = {};
+const enPlurals: {
+    [key: string]: {
+        [plural: string]: string;
+    };
+} = {};
 
 for (const key of Object.keys(inputTranslationsRaw)) {
     const parts = key.split("|");
@@ -249,9 +258,9 @@ for (const key of Object.keys(inputTranslationsRaw)) {
     }
 }
 
-const translatables = new Set();
+const translatables = new Set<string>();
 
-const walkOpts = {
+const walkOpts: WalkOptions = {
     listeners: {
         names: function(root, nodeNamesArray) {
             // Sort the names case insensitively and alphabetically to
@@ -267,7 +276,7 @@ const walkOpts = {
         file: function(root, fileStats, next) {
             const fullPath = path.join(root, fileStats.name);
 
-            let trs;
+            let trs: Set<string>;
             if (fileStats.name.endsWith('.js') || fileStats.name.endsWith('.ts') || fileStats.name.endsWith('.tsx')) {
                 trs = getTranslationsJs(fullPath);
             } else if (fileStats.name.endsWith('.html')) {
@@ -276,7 +285,7 @@ const walkOpts = {
                 return;
             }
             console.log(`${fullPath} (${trs.size} strings)`);
-            for (const tr of trs.values()) {
+            for (const tr of trs) {
                 // Convert DOS line endings to unix
                 translatables.add(tr.replace(/\r\n/g, "\n"));
             }
@@ -286,11 +295,11 @@ const walkOpts = {
 
 for (const path of SEARCH_PATHS) {
     if (fs.existsSync(path)) {
-        walk.walkSync(path, walkOpts);
+        walkSync(path, walkOpts);
     }
 }
 
-const trObj = {};
+const trObj: Record<string, string | string[]> = {};
 for (const tr of translatables) {
     if (tr.includes("|")) {
         if (inputTranslationsRaw[tr]) {
@@ -305,7 +314,7 @@ for (const tr of translatables) {
 
 fs.writeFileSync(
     OUTPUT_FILE,
-    JSON.stringify(trObj, translatables.values(), 4) + "\n"
+    JSON.stringify(trObj, Array.from(translatables), 4) + "\n"
 );
 
 console.log();
