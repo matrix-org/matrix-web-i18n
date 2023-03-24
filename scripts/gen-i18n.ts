@@ -34,6 +34,7 @@ import {
     isTemplateLiteral,
     isIdentifier,
     isCallExpression,
+    isNewExpression,
     isObjectProperty,
     isObjectExpression,
     ObjectExpression,
@@ -151,7 +152,11 @@ function getTranslationsJs(file: string): Set<string> {
         });
         traverse(babelParsed, {
             enter: (p) => {
-                if (isCallExpression(p.node) && isIdentifier(p.node.callee) && TRANSLATIONS_FUNCS.includes(p.node.callee.name)) {
+                if (
+                    (isNewExpression(p.node) || isCallExpression(p.node)) &&
+                    isIdentifier(p.node.callee) &&
+                    TRANSLATIONS_FUNCS.includes(p.node.callee.name)
+                ) {
                     const tKey = getTKey(p.node.arguments[0]);
 
                     // This happens whenever we call _t with non-literals (ie. whenever we've
