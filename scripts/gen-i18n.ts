@@ -241,7 +241,6 @@ function getTranslationsOther(file: string): Set<string> {
 type Translations = Record<string, string | {
     one?: string;
     other: string;
-    zero?: string;
 }>;
 
 const inputTranslationsRaw: Readonly<Translations> = JSON.parse(fs.readFileSync(INPUT_TRANSLATIONS_FILE, { encoding: 'utf8' }));
@@ -303,7 +302,6 @@ for (const tr of translatables) {
         trObj[tr] = {
             "other": inputTranslationsRaw[tr + "|other"] as string || tr,
             "one": inputTranslationsRaw[tr + "|one"] as string,
-            "zero": inputTranslationsRaw[tr + "|zero"] as string,
         };
     }
 }
