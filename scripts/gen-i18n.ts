@@ -1,5 +1,5 @@
 /*
-Copyright 2017-2021 The Matrix.org Foundation C.I.C.
+Copyright 2017-2023 The Matrix.org Foundation C.I.C.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -117,10 +117,11 @@ function getFormatStrings(str: string): Set<string> {
     return formatStrings;
 }
 
-function getTranslationsJs(file: string): Set<string> {
+function getTranslationsJs(file: string): [keys: Set<string>, plurals: Set<string>] {
     const contents = fs.readFileSync(file, { encoding: 'utf8' });
 
-    const trs = new Set<string>();
+    const keys = new Set<string>();
+    const plurals = new Set<string>();
 
     try {
         const plugins: ParserPlugin[] = [
@@ -208,16 +209,9 @@ function getTranslationsJs(file: string): Set<string> {
                         }
                     }
 
+                    keys.add(tKey);
                     if (isPlural) {
-                        trs.add(tKey + "|other");
-                        const plurals = enPlurals[tKey];
-                        if (plurals) {
-                            for (const pluralType of Object.keys(plurals)) {
-                                trs.add(tKey + "|" + pluralType);
-                            }
-                        }
-                    } else {
-                        trs.add(tKey);
+                        plurals.add(tKey);
                     }
                 }
             },
@@ -227,7 +221,7 @@ function getTranslationsJs(file: string): Set<string> {
         process.exit(1);
     }
 
-    return trs;
+    return [keys, plurals];
 }
 
 function getTranslationsOther(file: string): Set<string> {
@@ -244,26 +238,15 @@ function getTranslationsOther(file: string): Set<string> {
     return trs;
 }
 
-// gather en_EN plural strings from the input translations file:
-// the en_EN strings are all in the source except
-// pluralised strings, which we need to pull in from elsewhere.
-const inputTranslationsRaw = JSON.parse(fs.readFileSync(INPUT_TRANSLATIONS_FILE, { encoding: 'utf8' }));
-const enPlurals: {
-    [key: string]: {
-        [plural: string]: string;
-    };
-} = {};
+type Translations = Record<string, string | {
+    one?: string;
+    other: string;
+    zero?: string;
+}>;
 
-for (const key of Object.keys(inputTranslationsRaw)) {
-    const parts = key.split("|");
-    if (parts.length > 1) {
-        const plurals = enPlurals[parts[0]] || {};
-        plurals[parts[1]] = inputTranslationsRaw[key];
-        enPlurals[parts[0]] = plurals;
-    }
-}
-
+const inputTranslationsRaw: Readonly<Translations> = JSON.parse(fs.readFileSync(INPUT_TRANSLATIONS_FILE, { encoding: 'utf8' }));
 const translatables = new Set<string>();
+const plurals = new Set<string>();
 
 const walkOpts: WalkOptions = {
     listeners: {
@@ -281,18 +264,23 @@ const walkOpts: WalkOptions = {
         file: function(root, fileStats, next) {
             const fullPath = path.join(root, fileStats.name);
 
-            let trs: Set<string>;
+            let keys: Set<string>;
+            let pluralKeys = new Set<string>();
             if (fileStats.name.endsWith('.js') || fileStats.name.endsWith('.ts') || fileStats.name.endsWith('.tsx')) {
-                trs = getTranslationsJs(fullPath);
+                [keys, pluralKeys] = getTranslationsJs(fullPath);
             } else if (fileStats.name.endsWith('.html')) {
-                trs = getTranslationsOther(fullPath);
+                keys = getTranslationsOther(fullPath);
             } else {
                 return;
             }
-            console.log(`${fullPath} (${trs.size} strings)`);
-            for (const tr of trs) {
+            console.log(`${fullPath} (${keys.size} strings)`);
+            for (const tr of keys) {
                 // Convert DOS line endings to unix
-                translatables.add(tr.replace(/\r\n/g, "\n"));
+                const key = tr.replace(/\r\n/g, "\n");
+                translatables.add(key);
+                if (pluralKeys.has(tr)) {
+                    plurals.add(key);
+                }
             }
         },
     }
@@ -304,22 +292,25 @@ for (const path of SEARCH_PATHS) {
     }
 }
 
-const trObj: Record<string, string | string[]> = {};
+const trObj: Translations = {};
 for (const tr of translatables) {
-    if (tr.includes("|")) {
-        if (inputTranslationsRaw[tr]) {
-            trObj[tr] = inputTranslationsRaw[tr];
-        } else {
-            trObj[tr] = tr.split("|")[0];
-        }
-    } else {
+    if (!plurals.has(tr)) {
         trObj[tr] = tr;
+    } else if (inputTranslationsRaw[tr]) {
+        trObj[tr] = inputTranslationsRaw[tr];
+    } else {
+        // Migration path for legacy flat file format
+        trObj[tr] = {
+            "other": inputTranslationsRaw[tr + "|other"] as string || tr,
+            "one": inputTranslationsRaw[tr + "|one"] as string,
+            "zero": inputTranslationsRaw[tr + "|zero"] as string,
+        };
     }
 }
 
 fs.writeFileSync(
     OUTPUT_FILE,
-    JSON.stringify(trObj, Array.from(translatables), 4) + "\n"
+    JSON.stringify(trObj, null, 4) + "\n"
 );
 
 console.log();
