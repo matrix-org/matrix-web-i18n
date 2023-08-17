@@ -41,6 +41,7 @@ import {
     Node,
 } from "@babel/types";
 import { ParserPlugin } from "@babel/parser";
+import _ from "lodash";
 
 // Find the package.json for the project we're running gen-18n against
 const projectPackageJsonPath = path.join(process.cwd(), 'package.json');
@@ -52,8 +53,9 @@ const TRANSLATIONS_FUNCS = ['_t', '_td', '_tDom']
     // "matrix_i18n_extra_translation_funcs" key
     .concat(projectPackageJson.matrix_i18n_extra_translation_funcs || []);
 
-const INPUT_TRANSLATIONS_FILE = 'src/i18n/strings/en_EN.json';
-const OUTPUT_FILE = 'src/i18n/strings/en_EN.json';
+const NESTING_KEY = process.env["NESTING_KEY"] || "|";
+const INPUT_TRANSLATIONS_FILE = process.env["INPUT_FILE"] || 'src/i18n/strings/en_EN.json';
+const OUTPUT_FILE = process.env["OUTPUT_FILE"] || 'src/i18n/strings/en_EN.json';
 
 // NB. The sync version of walk is broken for single files,
 // so we walk all of res rather than just res/home.html.
@@ -238,11 +240,15 @@ function getTranslationsOther(file: string): Set<string> {
     return trs;
 }
 
-type Translations = Record<string, string | {
+type Translation = string | {
     one?: string;
     other: string;
     zero?: string;
-}>;
+};
+
+interface Translations {
+    [key: string]: Translation | Translations;
+}
 
 const inputTranslationsRaw: Readonly<Translations> = JSON.parse(fs.readFileSync(INPUT_TRANSLATIONS_FILE, { encoding: 'utf8' }));
 const translatables = new Set<string>();
@@ -292,19 +298,21 @@ for (const path of SEARCH_PATHS) {
     }
 }
 
+function getPath(key: string): string[] {
+    return key.split(NESTING_KEY);
+}
+
 const trObj: Translations = {};
 for (const tr of translatables) {
-    if (!plurals.has(tr)) {
-        trObj[tr] = tr;
-    } else if (inputTranslationsRaw[tr]) {
-        trObj[tr] = inputTranslationsRaw[tr];
+    const path = getPath(tr);
+    if (_.get(inputTranslationsRaw, path)) {
+        _.set(trObj, path, _.get(inputTranslationsRaw, path));
+    } else if (!plurals.has(tr)) {
+        _.set(trObj, path, tr);
     } else {
-        // Migration path for legacy flat file format
-        trObj[tr] = {
-            "other": inputTranslationsRaw[tr + "|other"] as string || tr,
-            "one": inputTranslationsRaw[tr + "|one"] as string,
-            "zero": inputTranslationsRaw[tr + "|zero"] as string,
-        };
+        _.set(trObj, path, {
+            "other": tr,
+        })
     }
 }
 
