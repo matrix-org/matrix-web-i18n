@@ -243,7 +243,6 @@ function getTranslationsOther(file: string): Set<string> {
 type Translation = string | {
     one?: string;
     other: string;
-    zero?: string;
 };
 
 interface Translations {
