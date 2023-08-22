@@ -188,8 +188,9 @@ function getTranslationsJs(file: string): [keys: Set<string>, plurals: Set<strin
                             if (p.node.arguments.length > 2 && isObjectExpression(p.node.arguments[2])) {
                                 const tagMap = p.node.arguments[2];
                                 for (const prop of tagMap.properties || []) {
-                                    if (isObjectProperty(prop) && isStringLiteral(prop.key)) {
-                                        const tag = prop.key.value;
+                                    if (isObjectProperty(prop) && (isStringLiteral(prop.key) || isIdentifier(prop.key))) {
+                                        const tag = isIdentifier(prop.key) ? prop.key.name : prop.key.value;
+
                                         // RegExp same as in src/languageHandler.js
                                         const regexp = new RegExp(`(<${tag}>(.*?)<\\/${tag}>|<${tag}>|<${tag}\\s*\\/>)`);
                                         if (!tKey.match(regexp)) {
