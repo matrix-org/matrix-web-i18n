@@ -42,6 +42,13 @@ import {
 } from "@babel/types";
 import { ParserPlugin } from "@babel/parser";
 import _ from "lodash";
+import {
+    getPath,
+    getTranslations,
+    OUTPUT_FILE,
+    putTranslations,
+    Translations
+} from "./common";
 
 // Find the package.json for the project we're running gen-18n against
 const projectPackageJsonPath = path.join(process.cwd(), 'package.json');
@@ -52,10 +59,6 @@ const TRANSLATIONS_FUNCS = ['_t', '_td', '_tDom']
     // per project in package.json under the
     // "matrix_i18n_extra_translation_funcs" key
     .concat(projectPackageJson.matrix_i18n_extra_translation_funcs || []);
-
-const NESTING_KEY = process.env["NESTING_KEY"] || "|";
-const INPUT_TRANSLATIONS_FILE = process.env["INPUT_FILE"] || 'src/i18n/strings/en_EN.json';
-const OUTPUT_FILE = process.env["OUTPUT_FILE"] || 'src/i18n/strings/en_EN.json';
 
 // NB. The sync version of walk is broken for single files,
 // so we walk all of res rather than just res/home.html.
@@ -240,16 +243,7 @@ function getTranslationsOther(file: string): Set<string> {
     return trs;
 }
 
-type Translation = string | {
-    one?: string;
-    other: string;
-};
-
-interface Translations {
-    [key: string]: Translation | Translations;
-}
-
-const inputTranslationsRaw: Readonly<Translations> = JSON.parse(fs.readFileSync(INPUT_TRANSLATIONS_FILE, { encoding: 'utf8' }));
+const inputTranslationsRaw = getTranslations();
 const translatables = new Set<string>();
 const plurals = new Set<string>();
 
@@ -297,10 +291,6 @@ for (const path of SEARCH_PATHS) {
     }
 }
 
-function getPath(key: string): string[] {
-    return key.split(NESTING_KEY);
-}
-
 const trObj: Translations = {};
 for (const tr of translatables) {
     const path = getPath(tr);
@@ -316,10 +306,7 @@ for (const tr of translatables) {
     }
 }
 
-fs.writeFileSync(
-    OUTPUT_FILE,
-    JSON.stringify(trObj, null, 4) + "\n"
-);
+putTranslations(trObj);
 
 console.log();
 console.log(`Wrote ${translatables.size} strings to ${OUTPUT_FILE}`);
