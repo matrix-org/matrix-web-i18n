@@ -170,35 +170,37 @@ function getTranslationsJs(file: string, translations: Readonly<Translations>): 
                     // had to use a _td to compensate) so is expected.
                     if (tKey === null) return;
 
-                    const rawValue: Translation = _.get(translations, getPath(tKey));
-                    const englishValue = typeof rawValue === "string" ? rawValue : rawValue.other;
-
                     // check the format string against the args
                     // We only check _t: _td has no args
                     if (isIdentifier(p.node.callee) && p.node.callee.name === '_t') {
                         try {
-                            const placeholders = getFormatStrings(englishValue);
-                            for (const placeholder of placeholders) {
-                                if (p.node.arguments.length < 2 || !isObjectExpression(p.node.arguments[1])) {
-                                    throw new Error(`Placeholder found ('${placeholder}') but no substitutions given`);
-                                }
-                                const value = getObjectValue(p.node.arguments[1], placeholder);
-                                if (value === null) {
-                                    throw new Error(`No value found for placeholder '${placeholder}'`);
-                                }
-                            }
+                            const rawValue: Translation | undefined = _.get(translations, getPath(tKey));
+                            const englishValue = typeof rawValue === "string" ? rawValue : rawValue?.other;
 
-                            // Validate tag replacements
-                            if (p.node.arguments.length > 2 && isObjectExpression(p.node.arguments[2])) {
-                                const tagMap = p.node.arguments[2];
-                                for (const prop of tagMap.properties || []) {
-                                    if (isObjectProperty(prop) && (isStringLiteral(prop.key) || isIdentifier(prop.key))) {
-                                        const tag = isIdentifier(prop.key) ? prop.key.name : prop.key.value;
+                            if (englishValue) {
+                                const placeholders = getFormatStrings(englishValue);
+                                for (const placeholder of placeholders) {
+                                    if (p.node.arguments.length < 2 || !isObjectExpression(p.node.arguments[1])) {
+                                        throw new Error(`Placeholder found ('${placeholder}') but no substitutions given`);
+                                    }
+                                    const value = getObjectValue(p.node.arguments[1], placeholder);
+                                    if (value === null) {
+                                        throw new Error(`No value found for placeholder '${placeholder}'`);
+                                    }
+                                }
 
-                                        // RegExp same as in src/languageHandler.js
-                                        const regexp = new RegExp(`(<${tag}>(.*?)<\\/${tag}>|<${tag}>|<${tag}\\s*\\/>)`);
-                                        if (!englishValue.match(regexp)) {
-                                            throw new Error(`No match for ${regexp} in ${englishValue}`);
+                                // Validate tag replacements
+                                if (p.node.arguments.length > 2 && isObjectExpression(p.node.arguments[2])) {
+                                    const tagMap = p.node.arguments[2];
+                                    for (const prop of tagMap.properties || []) {
+                                        if (isObjectProperty(prop) && (isStringLiteral(prop.key) || isIdentifier(prop.key))) {
+                                            const tag = isIdentifier(prop.key) ? prop.key.name : prop.key.value;
+
+                                            // RegExp same as in src/languageHandler.js
+                                            const regexp = new RegExp(`(<${tag}>(.*?)<\\/${tag}>|<${tag}>|<${tag}\\s*\\/>)`);
+                                            if (!englishValue.match(regexp)) {
+                                                throw new Error(`No match for ${regexp} in ${englishValue}`);
+                                            }
                                         }
                                     }
                                 }
