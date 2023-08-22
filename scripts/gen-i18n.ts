@@ -47,6 +47,7 @@ import {
     getTranslations,
     OUTPUT_FILE,
     putTranslations,
+    Translation,
     Translations
 } from "./common";
 
@@ -122,7 +123,7 @@ function getFormatStrings(str: string): Set<string> {
     return formatStrings;
 }
 
-function getTranslationsJs(file: string): [keys: Set<string>, plurals: Set<string>] {
+function getTranslationsJs(file: string, translations: Readonly<Translations>): [keys: Set<string>, plurals: Set<string>] {
     const contents = fs.readFileSync(file, { encoding: 'utf8' });
 
     const keys = new Set<string>();
@@ -169,11 +170,14 @@ function getTranslationsJs(file: string): [keys: Set<string>, plurals: Set<strin
                     // had to use a _td to compensate) so is expected.
                     if (tKey === null) return;
 
+                    const rawValue: Translation = _.get(translations, getPath(tKey));
+                    const englishValue = typeof rawValue === "string" ? rawValue : rawValue.other;
+
                     // check the format string against the args
                     // We only check _t: _td has no args
                     if (isIdentifier(p.node.callee) && p.node.callee.name === '_t') {
                         try {
-                            const placeholders = getFormatStrings(tKey);
+                            const placeholders = getFormatStrings(englishValue);
                             for (const placeholder of placeholders) {
                                 if (p.node.arguments.length < 2 || !isObjectExpression(p.node.arguments[1])) {
                                     throw new Error(`Placeholder found ('${placeholder}') but no substitutions given`);
@@ -193,8 +197,8 @@ function getTranslationsJs(file: string): [keys: Set<string>, plurals: Set<strin
 
                                         // RegExp same as in src/languageHandler.js
                                         const regexp = new RegExp(`(<${tag}>(.*?)<\\/${tag}>|<${tag}>|<${tag}\\s*\\/>)`);
-                                        if (!tKey.match(regexp)) {
-                                            throw new Error(`No match for ${regexp} in ${tKey}`);
+                                        if (!englishValue.match(regexp)) {
+                                            throw new Error(`No match for ${regexp} in ${englishValue}`);
                                         }
                                     }
                                 }
@@ -267,7 +271,7 @@ const walkOpts: WalkOptions = {
             let keys: Set<string>;
             let pluralKeys = new Set<string>();
             if (fileStats.name.endsWith('.js') || fileStats.name.endsWith('.ts') || fileStats.name.endsWith('.tsx')) {
-                [keys, pluralKeys] = getTranslationsJs(fullPath);
+                [keys, pluralKeys] = getTranslationsJs(fullPath, inputTranslationsRaw);
             } else if (fileStats.name.endsWith('.html')) {
                 keys = getTranslationsOther(fullPath);
             } else {
