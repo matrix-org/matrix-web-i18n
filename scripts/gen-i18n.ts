@@ -311,6 +311,7 @@ for (const tr of translatables) {
     } else {
         _.set(trObj, path, {
             "other": tr,
+            "one": tr,
         })
     }
 }
