@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 import fs from "fs";
+import { isBinaryExpression, isStringLiteral, isTemplateLiteral, Node } from "@babel/types";
 
 export const NESTING_KEY = process.env["NESTING_KEY"] || "|";
 export const INPUT_FILE = process.env["INPUT_FILE"] || 'src/i18n/strings/en_EN.json';
@@ -52,4 +53,15 @@ export function putTranslations(translations: Translations, file = OUTPUT_FILE):
         file,
         JSON.stringify(translations, null, 4) + "\n"
     );
+}
+
+export function getTKey(arg: Node): string | null {
+    if (isStringLiteral(arg)) {
+        return arg.value;
+    } else if (isBinaryExpression(arg) && arg.operator === '+') {
+        return getTKey(arg.left)! + getTKey(arg.right)!;
+    } else if (isTemplateLiteral(arg)) {
+        return arg.quasis.map(q => q.value.raw).join('');
+    }
+    return null;
 }

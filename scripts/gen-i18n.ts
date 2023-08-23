@@ -30,20 +30,17 @@ import * as parser from "@babel/parser";
 import traverse from "@babel/traverse";
 import {
     isStringLiteral,
-    isBinaryExpression,
-    isTemplateLiteral,
     isIdentifier,
     isCallExpression,
     isNewExpression,
     isObjectProperty,
     isObjectExpression,
     ObjectExpression,
-    Node,
 } from "@babel/types";
 import { ParserPlugin } from "@babel/parser";
 import _ from "lodash";
 import {
-    getPath,
+    getPath, getTKey,
     getTranslations,
     OUTPUT_FILE,
     putTranslations,
@@ -73,17 +70,6 @@ function getObjectValue(obj: ObjectExpression, key: string): any {
         if (isObjectProperty(prop) && isIdentifier(prop.key) && prop.key.name === key) {
             return prop.value;
         }
-    }
-    return null;
-}
-
-function getTKey(arg: Node): string | null {
-    if (isStringLiteral(arg)) {
-        return arg.value;
-    } else if (isBinaryExpression(arg) && arg.operator === '+') {
-        return getTKey(arg.left)! + getTKey(arg.right)!;
-    } else if (isTemplateLiteral(arg)) {
-        return arg.quasis.map(q => q.value.raw).join('');
     }
     return null;
 }
