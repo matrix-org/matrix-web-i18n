@@ -33,7 +33,7 @@ const sourceTranslations = getTranslations();
 
 const translation = _.get(sourceTranslations, oldPath);
 if (!translation) {
-    throw new Error("Old key not present in source translations");
+    throw new Error(`"${argv._[0]}" key not present in source translations`);
 }
 
 function updateTranslations(translations: Translations): void {
