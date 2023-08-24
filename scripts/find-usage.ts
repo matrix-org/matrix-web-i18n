@@ -32,7 +32,7 @@ import { ParserPlugin } from "@babel/parser";
 import _ from "lodash";
 import { getTKey } from "./common";
 
-// Find the package.json for the project we're running gen-18n against
+// Find the package.json for the project we're running against
 const projectPackageJsonPath = path.join(process.cwd(), 'package.json');
 const projectPackageJson = require(projectPackageJsonPath);
 
