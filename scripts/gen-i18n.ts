@@ -30,18 +30,23 @@ import * as parser from "@babel/parser";
 import traverse from "@babel/traverse";
 import {
     isStringLiteral,
-    isBinaryExpression,
-    isTemplateLiteral,
     isIdentifier,
     isCallExpression,
     isNewExpression,
     isObjectProperty,
     isObjectExpression,
     ObjectExpression,
-    Node,
 } from "@babel/types";
 import { ParserPlugin } from "@babel/parser";
 import _ from "lodash";
+import {
+    getPath, getTKey,
+    getTranslations,
+    OUTPUT_FILE,
+    putTranslations,
+    Translation,
+    Translations
+} from "./common";
 
 // Find the package.json for the project we're running gen-18n against
 const projectPackageJsonPath = path.join(process.cwd(), 'package.json');
@@ -52,10 +57,6 @@ const TRANSLATIONS_FUNCS = ['_t', '_td', '_tDom']
     // per project in package.json under the
     // "matrix_i18n_extra_translation_funcs" key
     .concat(projectPackageJson.matrix_i18n_extra_translation_funcs || []);
-
-const NESTING_KEY = process.env["NESTING_KEY"] || "|";
-const INPUT_TRANSLATIONS_FILE = process.env["INPUT_FILE"] || 'src/i18n/strings/en_EN.json';
-const OUTPUT_FILE = process.env["OUTPUT_FILE"] || 'src/i18n/strings/en_EN.json';
 
 // NB. The sync version of walk is broken for single files,
 // so we walk all of res rather than just res/home.html.
@@ -69,17 +70,6 @@ function getObjectValue(obj: ObjectExpression, key: string): any {
         if (isObjectProperty(prop) && isIdentifier(prop.key) && prop.key.name === key) {
             return prop.value;
         }
-    }
-    return null;
-}
-
-function getTKey(arg: Node): string | null {
-    if (isStringLiteral(arg)) {
-        return arg.value;
-    } else if (isBinaryExpression(arg) && arg.operator === '+') {
-        return getTKey(arg.left)! + getTKey(arg.right)!;
-    } else if (isTemplateLiteral(arg)) {
-        return arg.quasis.map(q => q.value.raw).join('');
     }
     return null;
 }
@@ -119,7 +109,7 @@ function getFormatStrings(str: string): Set<string> {
     return formatStrings;
 }
 
-function getTranslationsJs(file: string): [keys: Set<string>, plurals: Set<string>] {
+function getTranslationsJs(file: string, translations: Readonly<Translations>): [keys: Set<string>, plurals: Set<string>] {
     const contents = fs.readFileSync(file, { encoding: 'utf8' });
 
     const keys = new Set<string>();
@@ -170,27 +160,33 @@ function getTranslationsJs(file: string): [keys: Set<string>, plurals: Set<strin
                     // We only check _t: _td has no args
                     if (isIdentifier(p.node.callee) && p.node.callee.name === '_t') {
                         try {
-                            const placeholders = getFormatStrings(tKey);
-                            for (const placeholder of placeholders) {
-                                if (p.node.arguments.length < 2 || !isObjectExpression(p.node.arguments[1])) {
-                                    throw new Error(`Placeholder found ('${placeholder}') but no substitutions given`);
-                                }
-                                const value = getObjectValue(p.node.arguments[1], placeholder);
-                                if (value === null) {
-                                    throw new Error(`No value found for placeholder '${placeholder}'`);
-                                }
-                            }
+                            const rawValue: Translation | undefined = _.get(translations, getPath(tKey));
+                            const englishValue = typeof rawValue === "string" ? rawValue : rawValue?.other;
 
-                            // Validate tag replacements
-                            if (p.node.arguments.length > 2 && isObjectExpression(p.node.arguments[2])) {
-                                const tagMap = p.node.arguments[2];
-                                for (const prop of tagMap.properties || []) {
-                                    if (isObjectProperty(prop) && isStringLiteral(prop.key)) {
-                                        const tag = prop.key.value;
-                                        // RegExp same as in src/languageHandler.js
-                                        const regexp = new RegExp(`(<${tag}>(.*?)<\\/${tag}>|<${tag}>|<${tag}\\s*\\/>)`);
-                                        if (!tKey.match(regexp)) {
-                                            throw new Error(`No match for ${regexp} in ${tKey}`);
+                            if (englishValue) {
+                                const placeholders = getFormatStrings(englishValue);
+                                for (const placeholder of placeholders) {
+                                    if (p.node.arguments.length < 2 || !isObjectExpression(p.node.arguments[1])) {
+                                        throw new Error(`Placeholder found ('${placeholder}') but no substitutions given`);
+                                    }
+                                    const value = getObjectValue(p.node.arguments[1], placeholder);
+                                    if (value === null) {
+                                        throw new Error(`No value found for placeholder '${placeholder}'`);
+                                    }
+                                }
+
+                                // Validate tag replacements
+                                if (p.node.arguments.length > 2 && isObjectExpression(p.node.arguments[2])) {
+                                    const tagMap = p.node.arguments[2];
+                                    for (const prop of tagMap.properties || []) {
+                                        if (isObjectProperty(prop) && (isStringLiteral(prop.key) || isIdentifier(prop.key))) {
+                                            const tag = isIdentifier(prop.key) ? prop.key.name : prop.key.value;
+
+                                            // RegExp same as in src/languageHandler.js
+                                            const regexp = new RegExp(`(<${tag}>(.*?)<\\/${tag}>|<${tag}>|<${tag}\\s*\\/>)`);
+                                            if (!englishValue.match(regexp)) {
+                                                throw new Error(`No match for ${regexp} in ${englishValue}`);
+                                            }
                                         }
                                     }
                                 }
@@ -240,16 +236,7 @@ function getTranslationsOther(file: string): Set<string> {
     return trs;
 }
 
-type Translation = string | {
-    one?: string;
-    other: string;
-};
-
-interface Translations {
-    [key: string]: Translation | Translations;
-}
-
-const inputTranslationsRaw: Readonly<Translations> = JSON.parse(fs.readFileSync(INPUT_TRANSLATIONS_FILE, { encoding: 'utf8' }));
+const inputTranslationsRaw = getTranslations();
 const translatables = new Set<string>();
 const plurals = new Set<string>();
 
@@ -272,7 +259,7 @@ const walkOpts: WalkOptions = {
             let keys: Set<string>;
             let pluralKeys = new Set<string>();
             if (fileStats.name.endsWith('.js') || fileStats.name.endsWith('.ts') || fileStats.name.endsWith('.tsx')) {
-                [keys, pluralKeys] = getTranslationsJs(fullPath);
+                [keys, pluralKeys] = getTranslationsJs(fullPath, inputTranslationsRaw);
             } else if (fileStats.name.endsWith('.html')) {
                 keys = getTranslationsOther(fullPath);
             } else {
@@ -297,10 +284,6 @@ for (const path of SEARCH_PATHS) {
     }
 }
 
-function getPath(key: string): string[] {
-    return key.split(NESTING_KEY);
-}
-
 const trObj: Translations = {};
 for (const tr of translatables) {
     const path = getPath(tr);
@@ -311,14 +294,12 @@ for (const tr of translatables) {
     } else {
         _.set(trObj, path, {
             "other": tr,
+            "one": tr,
         })
     }
 }
 
-fs.writeFileSync(
-    OUTPUT_FILE,
-    JSON.stringify(trObj, null, 4) + "\n"
-);
+putTranslations(trObj);
 
 console.log();
 console.log(`Wrote ${translatables.size} strings to ${OUTPUT_FILE}`);
