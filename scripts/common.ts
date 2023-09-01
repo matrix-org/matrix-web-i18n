@@ -16,22 +16,14 @@ limitations under the License.
 
 import fs from "fs";
 import { isBinaryExpression, isStringLiteral, isTemplateLiteral, Node } from "@babel/types";
+import { Translation, Translations } from "../src";
 
 export const NESTING_KEY = process.env["NESTING_KEY"] || "|";
 export const INPUT_FILE = process.env["INPUT_FILE"] || 'src/i18n/strings/en_EN.json';
 export const OUTPUT_FILE = process.env["OUTPUT_FILE"] || 'src/i18n/strings/en_EN.json';
 
-export type Translation = string | {
-    one?: string;
-    other: string;
-};
-
-export interface Translations {
-    [key: string]: Translation | Translations;
-}
-
 export function getPath(key: string): string[] {
-    return key.split(NESTING_KEY);
+    return key.replace(/\\n/g, "\n").split(NESTING_KEY);
 }
 
 export function getKeys(translations: Translations | Translation, path = ""): string[] {

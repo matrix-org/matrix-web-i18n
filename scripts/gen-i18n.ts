@@ -44,9 +44,8 @@ import {
     getTranslations,
     OUTPUT_FILE,
     putTranslations,
-    Translation,
-    Translations
 } from "./common";
+import { Translation, Translations } from "../src";
 
 // Find the package.json for the project we're running gen-18n against
 const projectPackageJsonPath = path.join(process.cwd(), 'package.json');

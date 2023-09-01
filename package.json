@@ -9,8 +9,11 @@
     "files": [
         "README.md",
         "package.json",
-        "scripts/*.js"
+        "scripts/*.js",
+        "lib/*.js"
     ],
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
     "bin": {
         "matrix-gen-i18n": "scripts/gen-i18n.js",
         "matrix-compare-i18n-files": "scripts/compare-file.js",
@@ -18,9 +21,10 @@
     },
     "scripts": {
         "build:ts": "tsc",
+        "build:ts-scripts": "tsc -p tsconfig-scripts.json",
         "build:chmod": "chmod +x scripts/*.js",
         "build:shebang": "perl -i -pe 'print \"#!/usr/bin/env node\\n\\n\" if $. == 1 && !/^#/; close ARGV if eof' scripts/*.js",
-        "build": "yarn build:ts && yarn build:chmod && yarn build:shebang",
+        "build": "yarn build:ts && yarn build:ts-scripts && yarn build:chmod && yarn build:shebang",
         "lint": "yarn lint:types",
         "lint:types": "tsc --noEmit",
         "prepare": "yarn build"
