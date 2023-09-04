@@ -1,0 +1,18 @@
+# Uploads new source keys into the Localazy platform when they hit develop
+# Localazy is smart enough to not clobber strings which changed upstream
+# https://localazy.com/docs/general/editing-source-language#upload-rules-vs-changes-in-localazy
+name: Localazy Upload
+on:
+    workflow_call:
+        secrets:
+            LOCALAZY_WRITE_KEY:
+                required: true
+jobs:
+    upload:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - uses: localazy/upload@27e6b5c0fddf4551596b42226b1c24124335d24a # v1
+              with:
+                  write_key: ${{ secrets.LOCALAZY_WRITE_KEY }}
