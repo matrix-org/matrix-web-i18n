@@ -1,0 +1,43 @@
+# Downloads  into the Localazy platform when they hit develop
+name: Localazy Download
+on:
+    workflow_call:
+        secrets:
+            ELEMENT_BOT_TOKEN:
+                required: true
+jobs:
+    download:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - uses: actions/setup-node@v3
+              with:
+                  cache: "yarn"
+
+            - name: Install Deps
+              run: "yarn install --frozen-lockfile"
+
+            - uses: localazy/download@0a79880fb66150601e3b43606fab69c88123c087 # v1
+              with:
+                  groups: "-p includeSourceLang:true"
+
+            - run: yarn i18n:lint
+
+            - name: Create Pull Request
+              id: cpr
+              uses: peter-evans/create-pull-request@153407881ec5c347639a548ade7d8ad1d6740e38 # v5
+              with:
+                  token: ${{ secrets.ELEMENT_BOT_TOKEN }}
+                  branch: actions/localazy-download
+                  delete-branch: true
+                  title: Localazy Download
+                  labels: |
+                      T-Task
+
+            - name: Enable automerge
+              run: gh pr merge --merge --auto "$PR_NUMBER"
+              if: steps.cpr.outputs.pull-request-operation == 'created'
+              env:
+                  GH_TOKEN: ${{ secrets.ELEMENT_BOT_TOKEN }}
+                  PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
