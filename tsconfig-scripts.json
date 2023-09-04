@@ -5,13 +5,9 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "strict": true,
-    "noUnusedLocals": true,
-    "outDir": "lib",
-    "rootDir": "src",
-    "declaration": true,
-    "declarationMap": true
+    "noUnusedLocals": true
   },
   "include": [
-    "./src/*.ts"
+    "./scripts/*.ts"
   ]
 }

@@ -16,16 +16,18 @@ limitations under the License.
 
 import parseArgs from "minimist";
 import _ from "lodash";
-import { getPath, getTranslations, putTranslations, Translations } from "./common";
 import fs from "fs";
 import path from "path";
+
+import { getPath, getTranslations, putTranslations } from "./common";
+import { Translations } from "../src";
 
 const I18NDIR = "src/i18n/strings";
 
 const argv = parseArgs<{
     copy: boolean;
 }>(process.argv.slice(2), {
-    boolean: ["copy", "move", "case-insensitive", "find-and-replace"],
+    boolean: ["copy"],
 });
 
 const [oldPath, newPath] = argv._.map(getPath);
