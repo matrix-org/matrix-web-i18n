@@ -9,8 +9,8 @@
     "files": [
         "README.md",
         "package.json",
-        "scripts/*.js",
-        "lib/*.js"
+        "scripts",
+        "lib"
     ],
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
