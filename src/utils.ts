@@ -19,7 +19,7 @@ limitations under the License.
 
 /**
  * Returns a language string with underscores replaced with
- * hyphens, and lowercased.
+ * hyphens, and lower-cased.
  *
  * @param {string} language The language string to be normalized
  * @returns {string} The normalized language string
@@ -32,10 +32,10 @@ export function normalizeLanguageKey(language: string): string {
  * Turns a language string, normalises it,
  * (see normalizeLanguageKey) into an array of language strings
  * with fallback to generic languages
- * (eg. 'pt-BR' => ['pt-br', 'pt'])
+ * (e.g. 'pt-BR' => ['pt-br', 'pt'])
  *
- * @param {string} language The input language string
- * @return {string[]} List of normalised languages
+ * @param language The input language string
+ * @return a list of normalised languages
  */
 export function getNormalizedLanguageKeys(language: string): string[] {
     const languageKeys: string[] = [];
