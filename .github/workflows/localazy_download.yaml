@@ -18,6 +18,9 @@ jobs:
             - name: Install Deps
               run: "yarn install --frozen-lockfile"
 
+            - name: Prune i18n
+              run: "rm -R src/i18n/strings/*.json"
+
             - uses: localazy/download@0a79880fb66150601e3b43606fab69c88123c087 # v1
               with:
                   groups: "-p includeSourceLang:true"
