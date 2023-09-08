@@ -25,6 +25,8 @@ jobs:
               with:
                   groups: "-p includeSourceLang:true"
 
+            - run: ls -lah src/i18n/strings/
+
             - run: yarn i18n:lint
 
             - name: Create Pull Request
