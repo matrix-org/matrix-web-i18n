@@ -37,6 +37,9 @@ const translation = _.get(sourceTranslations, oldPath);
 if (!translation) {
     throw new Error(`"${argv._[0]}" key not present in source translations`);
 }
+if (_.get(sourceTranslations, newPath)) {
+    throw new Error(`"${argv._[1]}" key already present in source translations`);
+}
 
 function updateTranslations(translations: Translations): void {
     const value = _.get(translations, oldPath);
