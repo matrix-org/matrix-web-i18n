@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+import { KEY_SEPARATOR } from "./index";
+
 /**
  * Utility type for string dot notation for accessing nested object properties.
  * Based on https://stackoverflow.com/a/58436959
@@ -57,7 +59,7 @@ type Join<K, P, S extends string = "."> = K extends string | number
  * @typeParam MaxDepth the maximum depth to recurse to
  * @returns a union type representing all dot (Separator) string notation keys which can access a Leaf (of LeafType)
  */
-export type TranslationKey<T extends Translations> = Leaves<T, "|", string | { other: string }>;
+export type TranslationKey<T extends Translations> = Leaves<T, typeof KEY_SEPARATOR, string | { other: string }, 4>;
 
 export type Translation = string | {
     one?: string;
