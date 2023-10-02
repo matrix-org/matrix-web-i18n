@@ -16,9 +16,9 @@ limitations under the License.
 
 import fs from "fs";
 import { isBinaryExpression, isStringLiteral, isTemplateLiteral, Node } from "@babel/types";
-import { KEY_SEPARATOR, Translation, Translations } from "../src";
+import type { Translation, Translations } from "../src";
 
-export const NESTING_KEY = process.env["NESTING_KEY"] || KEY_SEPARATOR;
+export const NESTING_KEY = process.env["NESTING_KEY"] || "|";
 export const INPUT_FILE = process.env["INPUT_FILE"] || 'src/i18n/strings/en_EN.json';
 export const OUTPUT_FILE = process.env["OUTPUT_FILE"] || 'src/i18n/strings/en_EN.json';
 
