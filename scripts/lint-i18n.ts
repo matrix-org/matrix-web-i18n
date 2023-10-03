@@ -22,20 +22,25 @@ limitations under the License.
  * Usage: node scripts/lint-i18n.js
  */
 
-import { getTranslations, isTranslation } from "./common";
+import { getTranslations, isPluralisedTranslation } from "./common";
 
 const input = getTranslations();
 
 const filtered = Object.keys(input).filter(key => {
     const value = input[key];
+
+    // Check for invalid characters in the translation key
     if (!!key.replace(/[a-z0-9_]+/g, "")) {
         console.log(`"${key}": key contains invalid characters`);
         return true;
     }
-    if (key === input[key] || (isTranslation(value) && (key === value.other || key === value.one))) {
+
+    // Check that the translated string does not match the key.
+    if (key === input[key] || (isPluralisedTranslation(value) && (key === value.other || key === value.one))) {
         console.log(`"${key}": key matches value`);
         return true;
     }
+
     return false;
 });
 
