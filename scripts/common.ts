@@ -16,7 +16,7 @@ limitations under the License.
 
 import fs from "fs";
 import { isBinaryExpression, isStringLiteral, isTemplateLiteral, Node } from "@babel/types";
-import type { Translation, Translations } from "../src";
+import type { PluralisedTranslation, Translation, Translations } from "../src";
 
 export const NESTING_KEY = process.env["NESTING_KEY"] || "|";
 export const INPUT_FILE = process.env["INPUT_FILE"] || 'src/i18n/strings/en_EN.json';
@@ -56,4 +56,8 @@ export function getTKey(arg: Node): string | null {
         return arg.quasis.map(q => q.value.raw).join('');
     }
     return null;
+}
+
+export function isPluralisedTranslation(translation: Translations[string]): translation is PluralisedTranslation {
+    return typeof translation === "object" && "other" in translation;
 }
