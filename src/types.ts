@@ -61,10 +61,12 @@ type Join<K, P, S extends string = "."> = K extends string | number
  */
 export type TranslationKey<T extends Translations> = Leaves<T, typeof KEY_SEPARATOR, string | { other: string }, 4>;
 
-export type Translation = string | {
+export type PluralisedTranslation = {
     one?: string;
     other: string;
 };
+
+export type Translation = string | PluralisedTranslation;
 
 export interface Translations {
     [key: string]: Translation | Translations;
