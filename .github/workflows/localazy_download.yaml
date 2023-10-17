@@ -27,6 +27,7 @@ jobs:
 
             - run: "sudo chown runner:docker src/i18n/strings/*.json"
 
+            - run: "yarn i18n:sort"
             - run: "yarn i18n:lint"
 
             - name: Create Pull Request
