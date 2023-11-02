@@ -1,4 +1,4 @@
-# Downloads  into the Localazy platform when they hit develop
+# Downloads translations from the Localazy platform during the release process
 name: Localazy Download
 on:
     workflow_call:
