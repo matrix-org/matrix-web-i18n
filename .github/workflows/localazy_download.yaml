@@ -59,7 +59,9 @@ jobs:
 
             - name: Approve if no en_EN changes
               run: gh pr review --approve "$PR_NUMBER"
-              if: ${{ !contains(steps.changed_files.outputs.files, '/en_EN.json') }}
+              if: |
+                  steps.cpr.outputs.pull-request-operation == 'created' &&
+                  !contains(steps.changed_files.outputs.files, '/en_EN.json')
               env:
                   GH_TOKEN: ${{ secrets.ELEMENT_BOT_TOKEN }}
                   PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
