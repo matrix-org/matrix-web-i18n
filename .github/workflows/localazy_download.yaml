@@ -43,7 +43,7 @@ jobs:
               id: cpr
               uses: peter-evans/create-pull-request@153407881ec5c347639a548ade7d8ad1d6740e38 # v5
               with:
-                  token: ${{ secrets.ELEMENT_BOT_TOKEN }}
+                  token: ${{ secrets.GITHUB_TOKEN }}
                   branch: actions/localazy-download
                   delete-branch: true
                   title: Localazy Download
