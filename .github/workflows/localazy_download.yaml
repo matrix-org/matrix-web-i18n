@@ -59,8 +59,8 @@ jobs:
 
             - name: Approve if no en_EN changes
               run: |
-                  REVIEWERS=$(gh pr view "$PR_NUMBER" --json reviewRequests -q '[.reviewRequests[] | select(.__typename | contains("User")).login] | join(",")')
-                  gh pr edit --remove-reviewer "$REVIEWERS" "$PR_NUMBER"
+                  # REVIEWERS=$(gh pr view "$PR_NUMBER" --json reviewRequests -q '[.reviewRequests[] | select(.__typename | contains("User")).login] | join(",")')
+                  # gh pr edit --remove-reviewer "$REVIEWERS" "$PR_NUMBER"
                   gh pr review --approve "$PR_NUMBER"
               if: |
                   steps.cpr.outputs.pull-request-operation == 'created' &&
