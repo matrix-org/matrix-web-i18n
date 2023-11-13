@@ -43,7 +43,7 @@ jobs:
               id: cpr
               uses: peter-evans/create-pull-request@153407881ec5c347639a548ade7d8ad1d6740e38 # v5
               with:
-                  token: ${{ secrets.GITHUB_TOKEN }}
+                  token: ${{ secrets.ELEMENT_BOT_TOKEN }}
                   branch: actions/localazy-download
                   delete-branch: true
                   title: Localazy Download
@@ -66,5 +66,5 @@ jobs:
                   steps.cpr.outputs.pull-request-operation == 'created' &&
                   !contains(steps.changed_files.outputs.files, '/en_EN.json')
               env:
-                  GH_TOKEN: ${{ secrets.ELEMENT_BOT_TOKEN }}
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
