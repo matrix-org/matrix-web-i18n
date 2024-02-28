@@ -18,6 +18,8 @@ limitations under the License.
  * Applies the following lint rules to the src/i18n/strings/en_EN.json file:
  *  + ensures the translation key is not equal to its value
  *  + ensures the translation key contains only alphanumerics and underscores
+ *  + ensures no forbidden hardcoded words are found (specified comma separated in environment variable HARDCODED_WORDS)
+ *    unless they are explicitly allowed (keys specified comma separated in environment variable ALLOWED_HARDCODED_KEYS)
  *
  * Usage: node scripts/lint-i18n.js
  */
@@ -25,10 +27,23 @@ limitations under the License.
 import { getTranslations, isPluralisedTranslation } from "./common";
 import { KEY_SEPARATOR, Translation, Translations } from "../src";
 
+const hardcodedWords = process.env.HARDCODED_WORDS?.toLowerCase().split(",") ?? [];
+const allowedHardcodedKeys = process.env.ALLOWED_HARDCODED_KEYS?.split(",") ?? [];
+
 const input = getTranslations();
 
-const filtered = Object.keys(input).filter(key => {
-    const value = input[key];
+function nonNullable<T>(value: T): value is NonNullable<T> {
+    return value !== null && value !== undefined;
+}
+
+function expandTranslations(translation: Translation): string[] {
+    if (isPluralisedTranslation(translation)) {
+        return [translation.one, translation.other].filter(nonNullable)
+    } else {
+        return [translation];
+    }
+}
+
 function lintTranslation(keys: string[], value: Translation): boolean {
     const key = keys[keys.length - 1];
     const printableKey = keys.join(KEY_SEPARATOR);
@@ -43,6 +58,14 @@ function lintTranslation(keys: string[], value: Translation): boolean {
     if (key === input[key] || (isPluralisedTranslation(value) && (key === value.other || key === value.one))) {
         console.log(`"${printableKey}": key matches value`);
         return true;
+    }
+
+    if (hardcodedWords.length > 0) {
+        const words = expandTranslations(value).join(" ").toLowerCase().split(" ");
+        if (!allowedHardcodedKeys.includes(key) && hardcodedWords.some(word => words.includes(word))) {
+            console.log(`"${printableKey}": contains forbidden hardcoded word`);
+            return true;
+        }
     }
 
     return false;
