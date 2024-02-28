@@ -34,7 +34,7 @@ function lintTranslation(keys: string[], value: Translation): boolean {
     const printableKey = keys.join(KEY_SEPARATOR);
 
     // Check for invalid characters in the translation key
-    if (!!key.replace(/[a-z0-9_]+/g, "")) {
+    if (!!key.replace(/[a-z0-9@_.]+/gi, "")) {
         console.log(`"${printableKey}": key contains invalid characters`);
         return true;
     }
