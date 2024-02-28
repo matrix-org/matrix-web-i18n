@@ -17,7 +17,7 @@ limitations under the License.
 /**
  * Applies the following lint rules to the src/i18n/strings/en_EN.json file:
  *  + ensures the translation key is not equal to its value
- *  + ensures the translation key contains only alphanumerics and underscores
+ *  + ensures the translation key contains only alphanumerics and underscores (temporarily allows @ and . for compatibility)
  *  + ensures no forbidden hardcoded words are found (specified new line delimited in environment variable HARDCODED_WORDS)
  *    unless they are explicitly allowed (keys specified new line delimited in environment variable ALLOWED_HARDCODED_KEYS)
  *
