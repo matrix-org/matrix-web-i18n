@@ -46,24 +46,24 @@ function expandTranslations(translation: Translation): string[] {
 
 function lintTranslation(keys: string[], value: Translation): boolean {
     const key = keys[keys.length - 1];
-    const printableKey = keys.join(KEY_SEPARATOR);
+    const fullKey = keys.join(KEY_SEPARATOR);
 
     // Check for invalid characters in the translation key
     if (!!key.replace(/[a-z0-9@_.]+/gi, "")) {
-        console.log(`"${printableKey}": key contains invalid characters`);
+        console.log(`"${fullKey}": key contains invalid characters`);
         return true;
     }
 
     // Check that the translated string does not match the key.
     if (key === input[key] || (isPluralisedTranslation(value) && (key === value.other || key === value.one))) {
-        console.log(`"${printableKey}": key matches value`);
+        console.log(`"${fullKey}": key matches value`);
         return true;
     }
 
     if (hardcodedWords.length > 0) {
         const words = expandTranslations(value).join(" ").toLowerCase().split(" ");
-        if (!allowedHardcodedKeys.includes(key) && hardcodedWords.some(word => words.includes(word))) {
-            console.log(`"${printableKey}": contains forbidden hardcoded word`);
+        if (!allowedHardcodedKeys.includes(fullKey) && hardcodedWords.some(word => words.includes(word))) {
+            console.log(`"${fullKey}": contains forbidden hardcoded word`);
             return true;
         }
     }
