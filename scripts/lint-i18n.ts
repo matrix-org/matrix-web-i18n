@@ -23,26 +23,49 @@ limitations under the License.
  */
 
 import { getTranslations, isPluralisedTranslation } from "./common";
+import { KEY_SEPARATOR, Translation, Translations } from "../src";
 
 const input = getTranslations();
 
 const filtered = Object.keys(input).filter(key => {
     const value = input[key];
+function lintTranslation(keys: string[], value: Translation): boolean {
+    const key = keys[keys.length - 1];
+    const printableKey = keys.join(KEY_SEPARATOR);
 
     // Check for invalid characters in the translation key
     if (!!key.replace(/[a-z0-9_]+/g, "")) {
-        console.log(`"${key}": key contains invalid characters`);
+        console.log(`"${printableKey}": key contains invalid characters`);
         return true;
     }
 
     // Check that the translated string does not match the key.
     if (key === input[key] || (isPluralisedTranslation(value) && (key === value.other || key === value.one))) {
-        console.log(`"${key}": key matches value`);
+        console.log(`"${printableKey}": key matches value`);
         return true;
     }
 
     return false;
-});
+}
+
+function traverseTranslations(translations: Translations, keys: string[] = []): string[] {
+    const filtered: string[] = [];
+    Object.keys(translations).forEach(key => {
+        const value = translations[key];
+
+        if (typeof value === "object" && !isPluralisedTranslation(value)) {
+            filtered.push(...traverseTranslations(value, [...keys, key]));
+            return;
+        }
+
+        if (lintTranslation([...keys, key], value)) {
+            filtered.push(key);
+        }
+    });
+    return filtered;
+}
+
+const filtered = traverseTranslations(input);
 
 if (filtered.length > 0) {
     console.log(`${filtered.length} invalid translation keys`);
