@@ -18,8 +18,8 @@ limitations under the License.
  * Applies the following lint rules to the src/i18n/strings/en_EN.json file:
  *  + ensures the translation key is not equal to its value
  *  + ensures the translation key contains only alphanumerics and underscores
- *  + ensures no forbidden hardcoded words are found (specified comma separated in environment variable HARDCODED_WORDS)
- *    unless they are explicitly allowed (keys specified comma separated in environment variable ALLOWED_HARDCODED_KEYS)
+ *  + ensures no forbidden hardcoded words are found (specified new line delimited in environment variable HARDCODED_WORDS)
+ *    unless they are explicitly allowed (keys specified new line delimited in environment variable ALLOWED_HARDCODED_KEYS)
  *
  * Usage: node scripts/lint-i18n.js
  */
@@ -27,8 +27,8 @@ limitations under the License.
 import { getTranslations, isPluralisedTranslation } from "./common";
 import { KEY_SEPARATOR, Translation, Translations } from "../src";
 
-const hardcodedWords = process.env.HARDCODED_WORDS?.toLowerCase().split(",") ?? [];
-const allowedHardcodedKeys = process.env.ALLOWED_HARDCODED_KEYS?.split(",") ?? [];
+const hardcodedWords = process.env.HARDCODED_WORDS?.toLowerCase().split("\n").map(k => k.trim()) ?? [];
+const allowedHardcodedKeys = process.env.ALLOWED_HARDCODED_KEYS?.split("\n").map(k => k.trim()) ?? [];
 
 const input = getTranslations();
 
