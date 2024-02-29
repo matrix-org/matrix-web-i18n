@@ -61,3 +61,5 @@ export function getTKey(arg: Node): string | null {
 export function isPluralisedTranslation(translation: Translations[string]): translation is PluralisedTranslation {
     return typeof translation === "object" && "other" in translation;
 }
+
+export type { PluralisedTranslation, Translations, Translation };

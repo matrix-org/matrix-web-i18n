@@ -24,8 +24,7 @@ limitations under the License.
  * Usage: node scripts/lint-i18n.js
  */
 
-import { getTranslations, isPluralisedTranslation } from "./common";
-import { KEY_SEPARATOR, Translation, Translations } from "../src";
+import { getTranslations, isPluralisedTranslation, NESTING_KEY, Translation, Translations } from "./common";
 
 const hardcodedWords = process.env.HARDCODED_WORDS?.toLowerCase().split("\n").map(k => k.trim()) ?? [];
 const allowedHardcodedKeys = process.env.ALLOWED_HARDCODED_KEYS?.split("\n").map(k => k.trim()) ?? [];
@@ -46,7 +45,7 @@ function expandTranslations(translation: Translation): string[] {
 
 function lintTranslation(keys: string[], value: Translation): boolean {
     const key = keys[keys.length - 1];
-    const fullKey = keys.join(KEY_SEPARATOR);
+    const fullKey = keys.join(NESTING_KEY);
 
     // Check for invalid characters in the translation key
     if (!!key.replace(/[a-z0-9@_.]+/gi, "")) {
