@@ -17,32 +17,78 @@ limitations under the License.
 /**
  * Applies the following lint rules to the src/i18n/strings/en_EN.json file:
  *  + ensures the translation key is not equal to its value
- *  + ensures the translation key contains only alphanumerics and underscores
+ *  + ensures the translation key contains only alphanumerics and underscores (temporarily allows @ and . for compatibility)
+ *  + ensures no forbidden hardcoded words are found (specified new line delimited in environment variable HARDCODED_WORDS)
+ *    unless they are explicitly allowed (keys specified new line delimited in environment variable ALLOWED_HARDCODED_KEYS)
  *
  * Usage: node scripts/lint-i18n.js
  */
 
 import { getTranslations, isPluralisedTranslation } from "./common";
+import { KEY_SEPARATOR, Translation, Translations } from "../src";
+
+const hardcodedWords = process.env.HARDCODED_WORDS?.toLowerCase().split("\n").map(k => k.trim()) ?? [];
+const allowedHardcodedKeys = process.env.ALLOWED_HARDCODED_KEYS?.split("\n").map(k => k.trim()) ?? [];
 
 const input = getTranslations();
 
-const filtered = Object.keys(input).filter(key => {
-    const value = input[key];
+function nonNullable<T>(value: T): value is NonNullable<T> {
+    return value !== null && value !== undefined;
+}
+
+function expandTranslations(translation: Translation): string[] {
+    if (isPluralisedTranslation(translation)) {
+        return [translation.one, translation.other].filter(nonNullable)
+    } else {
+        return [translation];
+    }
+}
+
+function lintTranslation(keys: string[], value: Translation): boolean {
+    const key = keys[keys.length - 1];
+    const fullKey = keys.join(KEY_SEPARATOR);
 
     // Check for invalid characters in the translation key
-    if (!!key.replace(/[a-z0-9_]+/g, "")) {
-        console.log(`"${key}": key contains invalid characters`);
+    if (!!key.replace(/[a-z0-9@_.]+/gi, "")) {
+        console.log(`"${fullKey}": key contains invalid characters`);
         return true;
     }
 
     // Check that the translated string does not match the key.
     if (key === input[key] || (isPluralisedTranslation(value) && (key === value.other || key === value.one))) {
-        console.log(`"${key}": key matches value`);
+        console.log(`"${fullKey}": key matches value`);
         return true;
     }
 
+    if (hardcodedWords.length > 0) {
+        const words = expandTranslations(value).join(" ").toLowerCase().split(" ");
+        if (!allowedHardcodedKeys.includes(fullKey) && hardcodedWords.some(word => words.includes(word))) {
+            console.log(`"${fullKey}": contains forbidden hardcoded word`);
+            return true;
+        }
+    }
+
     return false;
-});
+}
+
+function traverseTranslations(translations: Translations, keys: string[] = []): string[] {
+    const filtered: string[] = [];
+    Object.keys(translations).forEach(key => {
+        const value = translations[key];
+
+        if (typeof value === "object" && !isPluralisedTranslation(value)) {
+            filtered.push(...traverseTranslations(value, [...keys, key]));
+            return;
+        }
+
+        if (lintTranslation([...keys, key], value)) {
+            filtered.push(key);
+        }
+    });
+    return filtered;
+}
+
+const filtered = traverseTranslations(input);
 
 if (filtered.length > 0) {
     console.log(`${filtered.length} invalid translation keys`);

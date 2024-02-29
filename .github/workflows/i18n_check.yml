@@ -2,7 +2,16 @@
 # Additionally prevents changes to files other than en_EN.json apart from RiotRobot automations
 name: i18n Check
 on:
-    workflow_call: {}
+    workflow_call:
+        inputs:
+            hardcoded-words:
+                type: string
+                required: false
+                description: "Hardcoded words to disallow, e.g. 'Element'."
+            allowed-hardcoded-keys:
+                type: string
+                required: false
+                description: "i18n keys which ignore the forbidden word check."
 jobs:
     check:
         runs-on: ubuntu-latest
@@ -37,5 +46,8 @@ jobs:
               run: "yarn install --frozen-lockfile"
 
             - run: yarn run i18n
+              env:
+                  HARDCODED_WORDS: ${{ inputs.hardcoded-words }}
+                  ALLOWED_HARDCODED_KEYS: ${{ inputs.allowed-hardcoded-keys }}
 
             - run: git diff --exit-code
