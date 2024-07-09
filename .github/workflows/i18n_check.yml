@@ -37,9 +37,10 @@ jobs:
                   exit 1
                   echo "Only translation files modified by 'yarn i18n' can be committed - other translation files will confuse weblate in unrecoverable ways."
 
-            - uses: actions/setup-node@v3
+            - uses: actions/setup-node@v4
               with:
                   cache: "yarn"
+                  node-version-file: package.json
 
             # Does not need branch matching as only analyses this layer
             - name: Install Deps
