@@ -62,7 +62,7 @@ const TRANSLATIONS_FUNCS = ['_t', '_td', '_tDom']
 // https://git.daplie.com/Daplie/node-walk/merge_requests/1 fixes it,
 // or if we get bored waiting for it to be merged, we could switch
 // to a project that's actively maintained.
-const SEARCH_PATHS = ['src', 'res'];
+const DEFAULT_SEARCH_PATHS = ['src', 'res'];
 
 function getObjectValue(obj: ObjectExpression, key: string): any {
     for (const prop of obj.properties) {
@@ -277,7 +277,10 @@ const walkOpts: WalkOptions = {
     }
 };
 
-for (const path of SEARCH_PATHS) {
+// Take search paths from arguments
+const searchPaths = process.argv.length > 1 ? process.argv.slice(1) : DEFAULT_SEARCH_PATHS;
+
+for (const path of searchPaths) {
     if (fs.existsSync(path)) {
         walkSync(path, walkOpts);
     }
