@@ -278,7 +278,9 @@ const walkOpts: WalkOptions = {
 };
 
 // Take search paths from arguments
-const searchPaths = process.argv.length > 1 ? process.argv.slice(1) : DEFAULT_SEARCH_PATHS;
+const searchPaths = process.argv.length > 2 ? process.argv.slice(2) : DEFAULT_SEARCH_PATHS;
+
+console.log(`Searching for translations in: ${searchPaths.join(",")}`);
 
 for (const path of searchPaths) {
     if (fs.existsSync(path)) {
