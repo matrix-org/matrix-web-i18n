@@ -35,7 +35,7 @@
         "build:rename-scripts": "for file in scripts/*.js; do [ -f \"$file\" ] && mv \"$file\" \"${file%.js}.cjs\"; done || true",
         "build:chmod": "chmod +x scripts/*.cjs",
         "build:shebang": "perl -i -pe 'print \"#!/usr/bin/env node\\n\\n\" if $. == 1 && !/^#/; close ARGV if eof' scripts/*.cjs",
-        "build": "yarn build:ts && yarn build:ts-scripts && yarn build:rename-scripts && yarn build:chmod && yarn build:shebang",
+        "build": "yarn build:ts && yarn build:ts-scripts && yarn build:chmod && yarn build:shebang",
         "lint": "yarn lint:types",
         "lint:types": "tsc --noEmit",
         "prepare": "yarn build"
