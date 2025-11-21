@@ -5,9 +5,11 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "strict": true,
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "outDir": "scripts"
   },
   "include": [
     "./scripts/*.ts"
-  ]
+  ],
+  "exclude": []
 }
