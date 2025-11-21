@@ -30,7 +30,7 @@ import {
 } from "@babel/types";
 import { ParserPlugin } from "@babel/parser";
 import _ from "lodash";
-import { getTKey } from "./common";
+import { getTKey } from "./common.cjs";
 
 // Find the package.json for the project we're running against
 const projectPackageJsonPath = path.join(process.cwd(), 'package.json');

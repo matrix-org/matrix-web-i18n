@@ -24,7 +24,7 @@ limitations under the License.
  * Usage: node scripts/lint-i18n.js
  */
 
-import { getTranslations, isPluralisedTranslation, NESTING_KEY, Translation, Translations } from "./common";
+import { getTranslations, isPluralisedTranslation, NESTING_KEY, Translation, Translations } from "./common.cjs";
 
 const hardcodedWords = process.env.HARDCODED_WORDS?.toLowerCase().split("\n").map(k => k.trim()) ?? [];
 const allowedHardcodedKeys = process.env.ALLOWED_HARDCODED_KEYS?.split("\n").map(k => k.trim()) ?? [];

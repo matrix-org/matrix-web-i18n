@@ -44,7 +44,7 @@ import {
     getTranslations,
     OUTPUT_FILE,
     putTranslations,
-} from "./common";
+} from "./common.cjs";
 import { Translation, Translations } from "../src";
 
 // Find the package.json for the project we're running gen-18n against

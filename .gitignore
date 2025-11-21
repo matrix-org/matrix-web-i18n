@@ -10,4 +10,4 @@ out
 /dist
 /lib
 /src/*.js
-/scripts/*.js
+/scripts/*.cjs
