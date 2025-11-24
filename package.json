@@ -6,6 +6,7 @@
         "i18n"
     ],
     "license": "Apache-2.0",
+    "type": "module",
     "files": [
         "README.md",
         "package.json",
@@ -13,18 +14,27 @@
         "lib"
     ],
     "main": "lib/index.js",
+    "module": "lib/index.js",
     "types": "lib/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./lib/index.d.ts",
+            "import": "./lib/index.js",
+            "default": "./lib/index.js"
+        }
+    },
     "bin": {
-        "matrix-gen-i18n": "scripts/gen-i18n.js",
-        "matrix-compare-i18n-files": "scripts/compare-file.js",
-        "matrix-i18n-rekey": "scripts/rekey.js",
-        "matrix-i18n-lint": "scripts/lint-i18n.js"
+        "matrix-gen-i18n": "scripts/gen-i18n.cjs",
+        "matrix-compare-i18n-files": "scripts/compare-file.cjs",
+        "matrix-i18n-rekey": "scripts/rekey.cjs",
+        "matrix-i18n-lint": "scripts/lint-i18n.cjs"
     },
     "scripts": {
         "build:ts": "tsc",
         "build:ts-scripts": "tsc -p tsconfig-scripts.json",
-        "build:chmod": "chmod +x scripts/*.js",
-        "build:shebang": "perl -i -pe 'print \"#!/usr/bin/env node\\n\\n\" if $. == 1 && !/^#/; close ARGV if eof' scripts/*.js",
+        "build:rename-scripts": "for file in scripts/*.js; do [ -f \"$file\" ] && mv \"$file\" \"${file%.js}.cjs\"; done || true",
+        "build:chmod": "chmod +x scripts/*.cjs",
+        "build:shebang": "perl -i -pe 'print \"#!/usr/bin/env node\\n\\n\" if $. == 1 && !/^#/; close ARGV if eof' scripts/*.cjs",
         "build": "yarn build:ts && yarn build:ts-scripts && yarn build:chmod && yarn build:shebang",
         "lint": "yarn lint:types",
         "lint:types": "tsc --noEmit",
