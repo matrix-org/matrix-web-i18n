@@ -34,7 +34,7 @@ jobs:
                   files: |
                       ${{ inputs.path }}/src/i18n/strings/*
                   files_ignore: |
-                      ${{github.event.inputs.path}}/src/i18n/strings/en_EN.json
+                      ${{ inputs.path }}/src/i18n/strings/en_EN.json
 
             - name: "Assert only en_EN was modified"
               if: steps.changed_files.outputs.any_modified == 'true'
