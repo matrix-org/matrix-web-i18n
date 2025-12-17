@@ -14,7 +14,7 @@ on:
                 description: "i18n keys which ignore the forbidden word check."
             path:
                 type: string
-                required:
+                required: false
                 description: "Path to root of project to check"
                 default: "."
 jobs:
