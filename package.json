@@ -27,7 +27,8 @@
         "matrix-gen-i18n": "scripts/gen-i18n.cjs",
         "matrix-compare-i18n-files": "scripts/compare-file.cjs",
         "matrix-i18n-rekey": "scripts/rekey.cjs",
-        "matrix-i18n-lint": "scripts/lint-i18n.cjs"
+        "matrix-i18n-lint": "scripts/lint-i18n.cjs",
+        "matrix-sort-i18n": "scripts/sort-json.cjs"
     },
     "scripts": {
         "build:ts": "tsc",
