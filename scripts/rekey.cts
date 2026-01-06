@@ -19,7 +19,7 @@ import _ from "lodash";
 import fs from "fs";
 import path from "path";
 
-import { getPath, getTranslations, putTranslations } from "./common";
+import { getPath, getTranslations, putTranslations } from "./common.cjs";
 import { Translations } from "../src";
 
 const I18NDIR = "src/i18n/strings";
