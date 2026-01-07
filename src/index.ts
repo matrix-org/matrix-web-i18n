@@ -17,4 +17,11 @@ limitations under the License.
 export const KEY_SEPARATOR = "|";
 
 export * from "./utils";
-export type * from "./types";
+export type {
+    TranslationKey,
+    Leaves,
+    Translation,
+    Translations,
+    PluralisedTranslation,
+} from "./types";
+
