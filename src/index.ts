@@ -17,4 +17,4 @@ limitations under the License.
 export const KEY_SEPARATOR = "|";
 
 export * from "./utils";
-export * from "./types";
+export type * from "./types";
