@@ -1,4 +1,4 @@
-# Runs `yarn i18n` and asserts that it made no further changes
+# Runs `yarn/pnpm i18n` and asserts that it made no further changes
 # Additionally prevents changes to files other than en_EN.json apart from RiotRobot automations
 name: i18n Check
 on:
@@ -17,11 +17,18 @@ on:
                 required: false
                 description: "Path to root of project to check"
                 default: "."
+            packageManager:
+                type: string
+                required: false
+                default: "yarn"
+                description: "Which of 'yarn' or 'pnpm' to use."
 jobs:
     check:
         runs-on: ubuntu-latest
         permissions:
             pull-requests: read
+        env:
+            PM: ${{ inputs.packageManager }}
         steps:
             - uses: actions/checkout@v3
 
@@ -40,24 +47,24 @@ jobs:
               if: steps.changed_files.outputs.any_modified == 'true'
               run: |
                   exit 1
-                  echo "Only translation files modified by 'yarn i18n' can be committed - other translation files will confuse weblate in unrecoverable ways."
+                  echo "Only translation files modified by '$PM i18n' can be committed - other translation files will confuse weblate in unrecoverable ways."
 
             - run: corepack enable
             - uses: actions/setup-node@v4
               with:
-                  cache: "yarn"
+                  cache: ${{ inputs.packageManager }}
                   node-version-file: package.json
 
             # Does not need branch matching as only analyses this layer
             - name: Install Deps
               working-directory: ${{ inputs.path }}
-              run: "yarn install --frozen-lockfile"
+              run: "$PM install --frozen-lockfile"
 
             - name: "Run i18n"
               working-directory: ${{ inputs.path }}
               env:
                   HARDCODED_WORDS: ${{ inputs.hardcoded-words }}
                   ALLOWED_HARDCODED_KEYS: ${{ inputs.allowed-hardcoded-keys }}
-              run: yarn run i18n
+              run: $PM run i18n
 
             - run: git diff --exit-code
