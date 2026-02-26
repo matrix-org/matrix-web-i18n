@@ -37,7 +37,9 @@ jobs:
               with:
                   groups: "-p includeSourceLang:true"
 
-            - run: "sudo chown runner:docker src/i18n/strings/*.json"
+            - run: |
+                  shopt -s globstar
+                  sudo chown runner:docker **/src/i18n/strings/*.json
 
             - run: "$PM i18n:sort"
             - run: "$PM i18n:lint"
