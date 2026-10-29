@@ -27,6 +27,7 @@ jobs:
         runs-on: ubuntu-latest
         permissions:
             pull-requests: read
+            contents: read
         env:
             PM: ${{ inputs.packageManager }}
         steps:
